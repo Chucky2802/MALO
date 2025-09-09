@@ -1,129 +1,104 @@
+// src/Components/Dashboard.jsx
 import React, { useState } from 'react';
 import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom';
-import "bootstrap-icons/font/bootstrap-icons.css";
-import 'bootstrap/dist/css/bootstrap.min.css';
-import './Styles.css';
+import 'bootstrap-icons/font/bootstrap-icons.css';
+import '../Styles/Dashboard.css';
 import axios from 'axios';
 
-axios.defaults.withCredentials = true;
+const apiBase =
+  import.meta?.env?.VITE_API_URL ||
+  process.env.REACT_APP_API_URL ||
+  'http://localhost:4000';
 
-const Dashboard = () => {
+export default function Dashboard() {
+  const [collapsed, setCollapsed] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
-  const handleLogout = () => {
-    axios.get('http://localhost:3000/auth/logout')
-      .then(result => {
-        if (result.data.Status) {
-          navigate('/adminlogin');
-        }
-      })
-      .catch(error => {
-        console.error('Logout error:', error);
-      });
+  const goto = (path) => navigate(path);
+
+  const logout = async () => {
+    try {
+      const { data } = await axios.get(`${apiBase}/auth/logout`, { withCredentials: true });
+      if (data?.Status) navigate('/adminlogin');
+    } catch (e) {
+      console.error('Logout error:', e);
+    }
   };
 
-  const [sidebarVisible, setSidebarVisible] = useState(true);
-
-  const handleMouseEnter = () => {
-    setSidebarVisible(true);
-  };
-
-  const handleMouseLeave = () => {
-    setSidebarVisible(false);
-  };
+  const items = [
+    { to: '/dashboard', icon: 'bi-house-door', label: 'Dashboard' },
+    { to: '/dashboard/employee-management', icon: 'bi-people', label: 'Employee Management' },
+    { to: '/dashboard/category', icon: 'bi-card-list', label: 'Category' },
+    { to: '/dashboard/customer-management', icon: 'bi-people', label: 'Customer Management' },
+    { to: '/dashboard/service-management', icon: 'bi-tools', label: 'Service Management' },
+    { to: '/dashboard/profile', icon: 'bi-person', label: 'Profile' },
+  ];
 
   return (
-    <div className='container-fluid'>
-      <div className='row no-gutters'>
-        <div 
-          className={`col-auto col-md-3 col-xl-2 px-0 bg-dark ${sidebarVisible ? '' : 'collapsed'}`} 
-          onMouseEnter={handleMouseEnter} 
-          onMouseLeave={handleMouseLeave}
-          style={{
-            position: 'fixed', 
-            top: 0, 
-            bottom: 0, 
-            height: '100vh', 
-            width: sidebarVisible ? '250px' : '80px', 
-            transition: 'width 0.3s',
-            overflow: 'hidden',
-            zIndex: 1000,
-            fontFamily: 'Arial, sans-serif'
-          }}
-        >
-          <div className='d-flex flex-column align-items-center align-items-sm-start px-3 pt-2 text-white min-vh-100'>
-            <Link to="/dashboard" className='d-flex align-items-center pb-3 mb-md-1 mt-md-3 me-md-auto text-white text-decoration-none'>
-              <span className='fs-5 fw-bolder d-none d-sm-inline'>Malo Printing Services</span>
-            </Link>
-            <hr className="w-100 my-2" style={{ borderTop: '3px solid #ffffff', opacity: 1 }} />
-            <ul className="nav nav-pills flex-column mb-sm-auto mb-0 align-items-center align-items-sm-start flex-grow-1" id="menu">
-              <li className='nav-item'>
-                <Link to="/dashboard" className={`nav-link text-white px-0 align-middle sidebar-link ${location.pathname === '/dashboard' ? 'active' : ''}`}>
-                  <i className="bi bi-house-door"></i> <span className={`ms-1 d-none d-sm-inline ${!sidebarVisible && 'd-none'}`}>Dashboard</span>
-                </Link>
-              </li>
-              <li className='nav-item'>
-                <Link to="/dashboard/employee-management" className={`nav-link text-white px-0 align-middle sidebar-link ${location.pathname === '/dashboard/employee-management' ? 'active' : ''}`}>
-                  <i className="bi bi-people"></i> <span className={`ms-1 d-none d-sm-inline ${!sidebarVisible && 'd-none'}`}>Employee Management</span>
-                </Link>
-              </li>
-              <li className='nav-item'>
-                <Link to="/dashboard/category" className={`nav-link text-white px-0 align-middle sidebar-link ${location.pathname === '/dashboard/category' ? 'active' : ''}`}>
-                  <i className="bi bi-card-list"></i> <span className={`ms-1 d-none d-sm-inline ${!sidebarVisible && 'd-none'}`}>Category</span>
-                </Link>
-              </li>
-              <li className='nav-item'>
-                <Link to="/dashboard/profile" className={`nav-link text-white px-0 align-middle sidebar-link ${location.pathname === '/dashboard/profile' ? 'active' : ''}`}>
-                  <i className="bi bi-person"></i> <span className={`ms-1 d-none d-sm-inline ${!sidebarVisible && 'd-none'}`}>Profile</span>
-                </Link>
-              </li>
-              <li className='nav-item'>
-                <Link to="/dashboard/customer-management" className={`nav-link text-white px-0 align-middle sidebar-link ${location.pathname === '/dashboard/customer-management' ? 'active' : ''}`}>
-                  <i className="bi bi-people"></i> <span className={`ms-1 d-none d-sm-inline ${!sidebarVisible && 'd-none'}`}>Customer Management</span>
-                </Link>
-              </li>
-              <li className='nav-item'>
-                <Link to="/dashboard/service-management" className={`nav-link text-white px-0 align-middle sidebar-link ${location.pathname === '/dashboard/service-management' ? 'active' : ''}`}>
-                  <i className="bi bi-tools"></i> <span className={`ms-1 d-none d-sm-inline ${!sidebarVisible && 'd-none'}`}>Service Management</span>
-                </Link>
-              </li>
-            </ul>
-            <hr className="w-100 my-2" style={{ borderTop: '3px solid #ffffff', opacity: 1 }} />
-            <ul className="no-list-style">
-              <li className='nav-item'>
-                <Link to="/dashboard/user-profile" className={`nav-link text-white px-0 align-middle sidebar-link ${location.pathname === '/dashboard/user-profile' ? 'active' : ''}`}>
-                  <i className="bi bi-person-circle"></i> <span className={`ms-1 d-none d-sm-inline ${!sidebarVisible && 'd-none'}`}>User Profile</span>
-                </Link>
-              </li>
-              <li className='nav-item'>
-                <Link to="/dashboard/settings" className={`nav-link text-white px-0 align-middle sidebar-link ${location.pathname === '/dashboard/settings' ? 'active' : ''}`}>
-                  <i className="bi bi-gear"></i> <span className={`ms-1 d-none d-sm-inline ${!sidebarVisible && 'd-none'}`}>Settings</span>
-                </Link>
-              </li>
-              <li className='nav-item'>
-                <button onClick={handleLogout} className='nav-link text-white px-0 align-middle sidebar-link' style={{ border: 'none', background: 'none' }}>
-                  <i className="bi bi-box-arrow-right"></i> <span className={`ms-1 d-none d-sm-inline ${!sidebarVisible && 'd-none'}`}>Logout</span>
-                </button>
-              </li>
-            </ul>
-          </div>
-        </div>
-        <div 
-          className='col' 
-          style={{
-            marginLeft: sidebarVisible ? '250px' : '80px', 
-            overflowY: 'auto', 
-            height: '100vh', 
-            transition: 'margin-left 0.3s', 
-            padding: '20px'
-          }}
-        >
-          <Outlet />
-        </div>
-      </div>
-    </div>
-  );
-};
+    <>
+      {/* Sidebar */}
+      <aside className={`sidebar ${collapsed ? 'collapsed' : ''}`}>
+        <a href="#/" className="brand" onClick={(e) => e.preventDefault()}>
+          <span className="brand__logo">M</span>
+          <span className="brand__text">Malo Printing Services</span>
+          <span className="brand__subtitle">Admin Console</span>
+        </a>
 
-export default Dashboard;
+        <nav className="nav">
+          <div className="nav-section">
+            <div className="nav-title">Main</div>
+            {items.map((it) => {
+              const active = location.pathname === it.to;
+              return (
+                <Link
+                  key={it.to}
+                  to={it.to}
+                  className={`nav-link ${active ? 'active' : ''}`}
+                  data-tooltip={it.label}
+                >
+                  <i className={`nav-icon bi ${it.icon}`} />
+                  <span className="nav-label">{it.label}</span>
+                </Link>
+              );
+            })}
+          </div>
+        </nav>
+
+        <div className="sidebar-footer">
+          <div className="user-profile" onClick={() => goto('/dashboard/user-profile')}>
+            <div className="user-avatar">MP</div>
+            <div className="user-info">
+              <h4>Admin</h4>
+              <p>malo@example.com</p>
+            </div>
+          </div>
+
+          <button className="nav-link" onClick={() => goto('/dashboard/settings')} data-tooltip="Settings">
+            <i className="nav-icon bi bi-gear" />
+            <span className="nav-label">Settings</span>
+          </button>
+
+          <button className="nav-link" onClick={logout} data-tooltip="Logout">
+            <i className="nav-icon bi bi-box-arrow-right" />
+            <span className="nav-label">Logout</span>
+          </button>
+        </div>
+      </aside>
+
+      {/* Toggle button */}
+      <button
+        className={`sidebar-toggle ${collapsed ? 'collapsed' : ''}`}
+        onClick={() => setCollapsed((c) => !c)}
+        aria-label="Toggle sidebar"
+      >
+        <i className={`bi ${collapsed ? 'bi-chevron-right' : 'bi-chevron-left'}`} />
+      </button>
+
+      {/* Content area */}
+      <main className={`content ${collapsed ? 'collapsed' : ''}`}>
+        <Outlet />
+      </main>
+    </>
+  );
+}

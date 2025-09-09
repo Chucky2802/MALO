@@ -2,97 +2,90 @@ import { Link } from 'react-router-dom';
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 
-const EmployeeManagement = () => {
-    const [employee, setEmployee] = useState([]);
+const API =
+  import.meta?.env?.VITE_API_URL ||
+  process.env.REACT_APP_API_URL ||
+  'http://localhost:4000';
 
-    useEffect(() => {
-        axios.get("http://localhost:3000/auth/employee")  
-            .then(result => {
-                if (result.data.Status) {
-                    setEmployee(result.data.Result);
-                } else {
-                    alert(result.data.Error);
-                }
-            })
-            .catch(err => console.log(err));
-    }, []);
+export default function EmployeeManagement() {
+  const [employees, setEmployees] = useState([]);
 
-    const handleDelete = (EmployeeID) => {
-        axios.delete("http://localhost:3000/auth/DeleteEmployee/"+EmployeeID)
-        .then(result => {
-            if(result.data.Status){
-                setEmployee(employee.filter(c => c.EmployeeID !== EmployeeID));
-            }else {
-                alert(result.data.Error);
-            }
-        })
-    }
+  useEffect(() => {
+    axios.get(`${API}/auth/employee`, { withCredentials: true })
+      .then(res => {
+        if (res.data.Status) setEmployees(res.data.Result || []);
+        else alert(res.data.Error);
+      })
+      .catch(console.error);
+  }, []);
 
-    return (
-        <div className='px-5 mt-3'>
-            <div className='d-flex justify-content-center'>
-                <h3>Employee List</h3>
-            </div>
-            <div className='d-flex justify-content-end'>
-            </div>
-            <Link to="/dashboard/add_Employee" className='btn btn-success'>
-                Add Employee
-            </Link>
-            <div className='mt-3'>
-                <div style={{ maxHeight: '1000px', overflowY: 'auto', border: '1px solid #ddd', padding: '10px' }}>
-                    <table className='table'>
-                        <thead>
-                            <tr>
-                                <th>Name</th>
-                                <th>Image</th>
-                                <th>Email</th>
-                                <th>Password</th>
-                                <th>Salary</th>
-                                <th>Category</th>
-                                <th>Employee Type</th>
-                                <th>Hours Worked</th>
-                                <th>Tasks Performed</th>
-                                <th>Performance Rating</th>
-                                <th>Address</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {
-                                employee.length > 0 ? (
-                                    employee.map(e => (
-                                        <tr key={e.EmployeeID}>
-                                            <td>{e.Name}</td>
-                                            <td>
-                                                <img src={'http://localhost:3000/auth/Images/' + e.ImagePath} alt="" className='employee_image'/>
-                                            </td>
-                                            <td>{e.Email}</td>
-                                            <td>{e.Password}</td>
-                                            <td>{e.Salary}</td>
-                                            <td>{e.Category}</td>
-                                            <td>{e.EmployeeType}</td>
-                                            <td>{e.HoursWorked}</td>
-                                            <td>{e.TasksPerformed}</td>
-                                            <td>{e.PerformanceRating}</td>
-                                            <td>{e.Address}</td>
-                                            <td>
-                                                <Link to={'/dashboard/EditEmployee/'+e.EmployeeID} className='btn btn-info btn-sm m-2'>Edit</Link>
-                                                <button className='btn btn-warning btn-sm' onClick={() => handleDelete(e.EmployeeID)}>Delete</button>
-                                            </td>
-                                        </tr>
-                                    ))
-                                ) : (
-                                    <tr>
-                                        <td colSpan="12">No employees found</td>
-                                    </tr>
-                                )
-                            }
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    )
+  const handleDelete = async (employeeid) => {
+    try {
+      const { data } = await axios.delete(`${API}/auth/DeleteEmployee/${employeeid}`, { withCredentials: true });
+      if (data.Status) setEmployees(prev => prev.filter(e => e.employeeid !== employeeid));
+      else alert(data.Error);
+    } catch (e) { console.error(e); }
+  };
+
+  return (
+    <div className='px-5 mt-3'>
+      <div className='d-flex justify-content-between align-items-center'>
+        <h3>Employee List</h3>
+        <Link to="/dashboard/add_Employee" className='btn btn-success'>Add Employee</Link>
+      </div>
+
+      <div className='mt-3' style={{ maxHeight: 1000, overflowY: 'auto', border: '1px solid #ddd', padding: 10 }}>
+        <table className='table'>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Image</th>
+              <th>Email</th>
+              <th>Salary</th>
+              <th>Category</th>
+              <th>Employee Type</th>
+              <th>Hours Worked</th>
+              <th>Tasks Performed</th>
+              <th>Performance Rating</th>
+              <th>Address</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {employees.length ? employees.map(e => (
+              <tr key={e.employeeid}>
+                <td>{e.name}</td>
+                <td>
+                  {e.imagepath ? (
+                    <img
+                      src={`${API}/images/${encodeURIComponent(e.imagepath)}`}
+                      alt={e.name}
+                      className='employee_image'
+                      style={{ width: 48, height: 48, objectFit: 'cover', borderRadius: 6 }}
+                    />
+                  ) : '—'}
+                </td>
+                <td>{e.email}</td>
+                <td>{e.salary}</td>
+                <td>{e.category}</td>
+                <td>{e.employeetype}</td>
+                <td>{e.hoursworked}</td>
+                <td style={{ maxWidth: 240, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  {e.tasksperformed}
+                </td>
+                <td>{e.performancerating}</td>
+                <td>{e.address}</td>
+                <td>
+                  <Link to={`/dashboard/EditEmployee/${e.employeeid}`} className='btn btn-info btn-sm m-2'>Edit</Link>
+                  <button className='btn btn-warning btn-sm' onClick={() => handleDelete(e.employeeid)}>Delete</button>
+                </td>
+              </tr>
+            )) : (
+              <tr><td colSpan="11">No employees found</td></tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
 }
-
-export default EmployeeManagement;
